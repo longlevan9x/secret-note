@@ -17,9 +17,14 @@ export const ProjectGroupNode = ({ data, selected }: NodeProps) => {
           }
         }}
       />
-      <div className="h-full w-full rounded-xl border-2 border-dashed border-primary/20 bg-primary/5 p-4 transition-colors group-hover:bg-primary/10">
-        <div className="absolute -top-3 left-4 bg-background px-2 text-xs font-bold text-primary uppercase tracking-widest border rounded shadow-sm">
+      <div className="h-full w-full rounded-[2rem] border-2 border-dashed border-primary/20 bg-primary/[0.02] backdrop-blur-[2px] p-6 transition-all duration-500 hover:bg-primary/[0.04] hover:border-primary/40 group/groupnode">
+        <div className="absolute -top-4 left-6 bg-primary text-[10px] font-black text-primary-foreground uppercase tracking-[0.2em] px-4 py-1.5 rounded-full shadow-lg shadow-primary/20 border border-white/10">
           {data.label as string}
+        </div>
+        
+        {/* Subtle decorative background element */}
+        <div className="absolute bottom-4 right-6 opacity-5 select-none pointer-events-none">
+           <span className="text-4xl font-black italic tracking-tighter uppercase">{data.label as string}</span>
         </div>
       </div>
     </>

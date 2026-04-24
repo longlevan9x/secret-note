@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useEffect } from "react";
+import { useCallback, useMemo, useEffect, useState } from "react";
 import {
   ReactFlow,
   Controls,
@@ -12,13 +12,29 @@ import {
   MarkerType,
   addEdge,
   Connection,
+  Panel,
+  useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import { useRouter } from "next/navigation";
 import { useWorkspace } from "@/context/WorkspaceContext";
 import { ServiceGraphNode } from "./ServiceGraphNode";
 import { ProjectGroupNode } from "./ProjectGroupNode";
 import ButtonEdge from "./ButtonEdge";
 import { GRAPH_CONFIG, NODE_TYPES } from "@/core/constants/graph";
+import { 
+  Maximize, 
+  LayoutDashboard, 
+  Plus, 
+  RotateCcw,
+  MousePointer2,
+  FolderTree,
+  Share2,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { AddServiceDialog } from "../dashboard/AddServiceDialog";
+import type { ServiceNode } from "@/core/schema/types";
+
 
 const nodeTypes = {
   [NODE_TYPES.SERVICE_NODE]: ServiceGraphNode,
@@ -30,7 +46,44 @@ const edgeTypes = {
 };
 
 export function DependencyGraph() {
-  const { data, updateWorkspaceData } = useWorkspace();
+  const {
+    data,
+    addService,
+    updateService,
+    setProjectPosition,
+    setProjectSize,
+    setServicePosition,
+  } = useWorkspace();
+  const router = useRouter();
+  const { fitView } = useReactFlow();
+  const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
+  const resolvedActiveProjectId =
+    activeProjectId && data?.projects.some((project) => project.id === activeProjectId)
+      ? activeProjectId
+      : data?.projects[0]?.id ?? null;
+
+  const serviceProjectMap = useMemo(() => {
+    const map = new Map<string, string>();
+    data?.projects.forEach((project) => {
+      project.nodes.forEach((service) => {
+        map.set(service.id, project.id);
+      });
+    });
+    return map;
+  }, [data]);
+
+  const handleDeleteEdge = useCallback(
+    (_edgeId: string, sourceId: string, targetId: string) => {
+      const projectId = serviceProjectMap.get(targetId);
+      if (!projectId) return;
+
+      void updateService(projectId, targetId, (node) => ({
+        ...node,
+        dependsOn: node.dependsOn.filter((id) => id !== sourceId),
+      }));
+    },
+    [serviceProjectMap, updateService]
+  );
 
   const { initialNodes, initialEdges } = useMemo(() => {
     const nodes: Node[] = [];
@@ -61,13 +114,7 @@ export function DependencyGraph() {
         data: { 
           label: project.name,
           onResizeEnd: (width: number, height: number) => {
-            const updatedProjects = data.projects.map((p) => {
-              if (p.id === project.id) {
-                return { ...p, size: { width, height } };
-              }
-              return p;
-            });
-            updateWorkspaceData({ ...data, projects: updatedProjects });
+            void setProjectSize(project.id, { width, height });
           }
         },
         draggable: true,
@@ -100,7 +147,10 @@ export function DependencyGraph() {
               id: `e-${depId}-${service.id}`,
               source: depId,
               target: service.id,
-              type: 'buttonEdge',
+              type: "buttonEdge",
+              data: {
+                onDeleteEdge: handleDeleteEdge,
+              },
               animated: true,
               style: { stroke: GRAPH_CONFIG.EDGE_COLOR, strokeWidth: GRAPH_CONFIG.EDGE_STROKE_WIDTH },
               markerEnd: {
@@ -118,34 +168,75 @@ export function DependencyGraph() {
     });
 
     return { initialNodes: nodes, initialEdges: edges };
-  }, [data]);
+  }, [data, handleDeleteEdge, setProjectSize]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
   const onNodeDragStop = useCallback(
-    (_: any, node: Node) => {
+    (_event: React.MouseEvent | TouchEvent, node: Node) => {
       if (!data) return;
 
-      const updatedProjects = data.projects.map((project) => {
+      data.projects.forEach((project) => {
         // If it's a project group
         if (`group-${project.id}` === node.id) {
-          return { ...project, position: node.position };
+          void setProjectPosition(project.id, node.position);
+          return;
         }
         
         // If it's a service node
-        return {
-          ...project,
-          nodes: project.nodes.map((n) => 
-            n.id === node.id ? { ...n, position: node.position } : n
-          ),
-        };
+        if (project.nodes.some((service) => service.id === node.id)) {
+          void setServicePosition(project.id, node.id, node.position);
+        }
       });
-
-      updateWorkspaceData({ ...data, projects: updatedProjects });
     },
-    [data, updateWorkspaceData]
+    [data, setProjectPosition, setServicePosition]
   );
+
+
+  const handleResetLayout = useCallback(() => {
+    if (!data) return;
+
+    let currentY = 0;
+
+    const resetProjects = data.projects.map((project) => {
+      const groupHeight = 300; // Default height for reset
+      
+      const updatedProject = {
+        ...project,
+        position: { x: 100, y: currentY },
+        nodes: project.nodes.map((node, index) => ({
+          ...node,
+          position: { 
+            x: 50 + index * 220, 
+            y: 50 
+          }
+        }))
+      };
+
+      currentY += groupHeight + 100;
+      return updatedProject;
+    });
+
+    void Promise.all(
+      resetProjects.flatMap((project) => [
+        setProjectPosition(project.id, project.position!),
+        ...project.nodes.map((node) => setServicePosition(project.id, node.id, node.position!)),
+      ])
+    );
+    
+    setTimeout(() => {
+      fitView({ duration: 800 });
+    }, 200);
+  }, [data, fitView, setProjectPosition, setServicePosition]);
+
+  const handleAddService = useCallback((serviceData: Omit<ServiceNode, "id">) => {
+    if (!data || data.projects.length === 0 || !resolvedActiveProjectId) return;
+    void addService(resolvedActiveProjectId, {
+      ...serviceData,
+      position: { x: 50, y: 50 },
+    });
+  }, [addService, data, resolvedActiveProjectId]);
 
   const onConnect = useCallback(
     (params: Connection) => {
@@ -154,46 +245,46 @@ export function DependencyGraph() {
       const sourceId = params.source;
       const targetId = params.target;
 
-      const updatedProjects = data.projects.map((project) => ({
-        ...project,
-        nodes: project.nodes.map((node) => {
-          if (node.id === targetId) {
-            if (!node.dependsOn.includes(sourceId)) {
-              return { ...node, dependsOn: [...node.dependsOn, sourceId] };
-            }
-          }
-          return node;
-        }),
-      }));
-
-      updateWorkspaceData({ ...data, projects: updatedProjects });
-      setEdges((eds) => addEdge({ ...params, type: 'buttonEdge' }, eds));
+      const projectId = serviceProjectMap.get(targetId);
+      if (projectId) {
+        void updateService(projectId, targetId, (node) => ({
+          ...node,
+          dependsOn: node.dependsOn.includes(sourceId)
+            ? node.dependsOn
+            : [...node.dependsOn, sourceId],
+        }));
+      }
+      setEdges((eds) =>
+        addEdge(
+          {
+            ...params,
+            type: "buttonEdge",
+            data: {
+              onDeleteEdge: handleDeleteEdge,
+            },
+          },
+          eds
+        )
+      );
     },
-    [data, updateWorkspaceData, setEdges]
+    [data, handleDeleteEdge, serviceProjectMap, setEdges, updateService]
   );
 
   const onEdgesDelete = useCallback(
     (deletedEdges: Edge[]) => {
       if (!data) return;
 
-      const updatedProjects = data.projects.map((project) => ({
-        ...project,
-        nodes: project.nodes.map((node) => {
-          const relevantEdges = deletedEdges.filter((e) => e.target === node.id);
-          if (relevantEdges.length > 0) {
-            const sourceIdsToRemove = relevantEdges.map((e) => e.source);
-            return {
-              ...node,
-              dependsOn: node.dependsOn.filter((id) => !sourceIdsToRemove.includes(id)),
-            };
-          }
-          return node;
-        }),
-      }));
+      deletedEdges.forEach((edge) => {
+        const projectId = serviceProjectMap.get(edge.target);
+        if (!projectId) return;
 
-      updateWorkspaceData({ ...data, projects: updatedProjects });
+        void updateService(projectId, edge.target, (node) => ({
+          ...node,
+          dependsOn: node.dependsOn.filter((id) => id !== edge.source),
+        }));
+      });
     },
-    [data, updateWorkspaceData]
+    [data, serviceProjectMap, updateService]
   );
 
   useEffect(() => {
@@ -201,8 +292,27 @@ export function DependencyGraph() {
     setEdges(initialEdges);
   }, [initialNodes, initialEdges, setNodes, setEdges]);
 
+  if (!data) {
+    return (
+      <div className="flex flex-col h-full items-center justify-center bg-zinc-950 gap-4">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        <p className="text-muted-foreground animate-pulse font-medium">Visualizing ecosystem...</p>
+      </div>
+    );
+  }
+
   if (!data || nodes.length === 0) {
-    return <div className="flex h-full items-center justify-center">No services available to map.</div>;
+    return (
+      <div className="flex flex-col h-full items-center justify-center bg-zinc-950 text-center p-8 space-y-4">
+        <div className="p-4 bg-zinc-900 rounded-full">
+          <Share2 className="w-12 h-12 text-zinc-700" />
+        </div>
+        <div className="max-w-xs">
+          <h3 className="text-xl font-bold text-white mb-2">Empty Ecosystem</h3>
+          <p className="text-sm text-muted-foreground">Add services in the Projects tab to see how they connect here.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -217,10 +327,87 @@ export function DependencyGraph() {
         onConnect={onConnect}
         onEdgesDelete={onEdgesDelete}
         onNodeDragStop={onNodeDragStop}
-        fitViewOptions={{ maxZoom: 1 }}
+        fitView
+        fitViewOptions={{ maxZoom: 0.8 }}
       >
         <Background />
         <Controls />
+        
+        <Panel position="top-right" className="flex flex-col gap-2">
+          <div className="flex flex-col p-2 gap-2 bg-card/80 backdrop-blur-md border rounded-2xl shadow-2xl">
+            {data.projects.length > 0 && (
+              <label className="flex items-center gap-2 rounded-xl border border-border/60 bg-background/80 px-3 py-2 text-xs">
+                <FolderTree className="h-3.5 w-3.5 text-muted-foreground" />
+                <select
+                  value={resolvedActiveProjectId ?? ""}
+                  onChange={(event) => setActiveProjectId(event.target.value)}
+                  className="w-full cursor-pointer bg-transparent font-medium outline-none"
+                  title="Target project"
+                >
+                  {data.projects.map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={() => fitView({ duration: 400 })} 
+              title="Fit View"
+              className="rounded-xl hover:bg-primary/10 hover:text-primary transition-all"
+            >
+              <Maximize className="w-4 h-4" />
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={handleResetLayout} 
+              title="Reset Layout"
+              className="rounded-xl hover:bg-primary/10 hover:text-primary transition-all"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </Button>
+
+            <div className="w-full h-px bg-border/50 my-1" />
+
+            <AddServiceDialog 
+              onAdd={handleAddService}
+              trigger={
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  title="Add Service"
+                  className="rounded-xl hover:bg-primary/10 hover:text-primary transition-all"
+                  disabled={!resolvedActiveProjectId}
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              }
+            />
+
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => router.push("/projects")}
+              title="Back to Dashboard"
+              className="rounded-xl hover:bg-primary/10 hover:text-primary transition-all"
+            >
+              <LayoutDashboard className="w-4 h-4" />
+            </Button>
+          </div>
+        </Panel>
+
+        <Panel position="bottom-center" className="mb-4">
+          <div className="px-4 py-2 bg-primary/10 backdrop-blur-sm border border-primary/20 rounded-full text-[10px] font-black text-primary uppercase tracking-[0.2em] flex items-center gap-2 shadow-lg shadow-primary/5">
+            <MousePointer2 className="w-3 h-3" />
+            Interactive Workspace
+          </div>
+        </Panel>
       </ReactFlow>
     </div>
   );

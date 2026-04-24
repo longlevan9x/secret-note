@@ -20,6 +20,8 @@ export const metadata: Metadata = {
   description: "Serverless Ecosystem Manager",
 };
 
+import { SecurityWrapper } from "@/components/security/SecurityWrapper";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -33,9 +35,11 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-background text-foreground" suppressHydrationWarning>
         <WorkspaceProvider>
-          {children}
+          <SecurityWrapper>
+            {children}
+            <CommandPalette />
+          </SecurityWrapper>
           <Toaster />
-          <CommandPalette />
         </WorkspaceProvider>
       </body>
     </html>

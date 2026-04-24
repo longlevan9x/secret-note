@@ -1,0 +1,4 @@
+interface:
+  display_name: "Phase Workflow"
+  short_description: "Run and review repo phases step by step"
+  default_prompt: "Use $phase-workflow to plan, execute, or review a phase from docs/phases in this repo."

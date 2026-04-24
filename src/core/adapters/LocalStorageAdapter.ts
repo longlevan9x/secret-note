@@ -1,7 +1,8 @@
 import { IStorage } from "../interfaces/IStorage";
 import { WorkspaceData } from "../schema/types";
+import { APP_CONFIG } from "../constants/app";
 
-const STORAGE_KEY = "secret_note_workspace_data";
+const STORAGE_KEY = APP_CONFIG.STORAGE_KEYS.WORKSPACE_DATA;
 
 export class LocalStorageAdapter implements IStorage {
   /**

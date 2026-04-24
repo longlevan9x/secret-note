@@ -15,6 +15,8 @@ interface ServiceConfigFormProps {
   setEnv: (env: string) => void;
   description: string;
   setDescription: (desc: string) => void;
+  initialSecrets: Record<string, string>;
+  setInitialSecrets: (secrets: Record<string, string>) => void;
   onBack: () => void;
   onSubmit: () => void;
 }
@@ -27,6 +29,8 @@ export function ServiceConfigForm({
   setEnv,
   description,
   setDescription,
+  initialSecrets,
+  setInitialSecrets,
   onBack,
   onSubmit
 }: ServiceConfigFormProps) {
@@ -79,13 +83,28 @@ export function ServiceConfigForm({
       </div>
 
       {selectedTemplate && (
-        <div className="space-y-3 pt-4 border-t">
-          <Label className="text-xs uppercase tracking-wider text-muted-foreground">Default Variables from {selectedTemplate.name}</Label>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+        <div className="space-y-4 pt-4 border-t">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs uppercase tracking-wider text-muted-foreground font-bold">Template Variables</Label>
+            <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded">Will be encrypted</span>
+          </div>
+          <div className="grid grid-cols-1 gap-4">
             {selectedTemplate.secretTemplates.map(t => (
-              <div key={t.key} className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary/40"></span>
-                <span className="font-mono font-medium text-foreground/70">{t.key}</span>
+              <div key={t.key} className="space-y-1.5 group">
+                <Label htmlFor={`secret-${t.key}`} className="text-xs font-mono text-foreground/70 group-hover:text-primary transition-colors">
+                  {t.key}
+                </Label>
+                <Input 
+                  id={`secret-${t.key}`}
+                  type="password"
+                  placeholder={`Value for ${t.key}...`}
+                  value={initialSecrets[t.key] || ""}
+                  onChange={(e) => setInitialSecrets({
+                    ...initialSecrets,
+                    [t.key]: e.target.value
+                  })}
+                  className="h-10 font-mono text-sm border-muted-foreground/20 focus-visible:border-primary/50 transition-all"
+                />
               </div>
             ))}
           </div>

@@ -14,6 +14,8 @@ import { ServiceTemplate, ServiceNode, Secret } from "@/core/schema/types";
 import { APP_CONFIG } from "@/core/constants/app";
 import { TemplateSelector } from "./add-service/TemplateSelector";
 import { ServiceConfigForm } from "./add-service/ServiceConfigForm";
+import { useWorkspace } from "@/context/WorkspaceContext";
+import { encryptSecret } from "@/core/security/crypto";
 
 interface AddServiceDialogProps {
   onAdd: (service: Omit<ServiceNode, "id">) => void;
@@ -29,6 +31,9 @@ export function AddServiceDialog({ onAdd, trigger }: AddServiceDialogProps) {
   const [serviceName, setServiceName] = useState("");
   const [env, setEnv] = useState(APP_CONFIG.DEFAULT_ENVIRONMENTS[0]);
   const [description, setDescription] = useState("");
+  const [initialSecrets, setInitialSecrets] = useState<Record<string, string>>({});
+
+  const { masterPassword } = useWorkspace();
 
   const resetState = () => {
     setStep("select");
@@ -36,6 +41,7 @@ export function AddServiceDialog({ onAdd, trigger }: AddServiceDialogProps) {
     setServiceName("");
     setEnv(APP_CONFIG.DEFAULT_ENVIRONMENTS[0]);
     setDescription("");
+    setInitialSecrets({});
   };
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -58,9 +64,12 @@ export function AddServiceDialog({ onAdd, trigger }: AddServiceDialogProps) {
 
     if (selectedTemplate) {
       selectedTemplate.secretTemplates.forEach(t => {
+        const value = initialSecrets[t.key] || "";
+        const encryptedValue = (value && masterPassword) ? encryptSecret(value, masterPassword) : value;
+        
         secrets.push({
           key: t.key,
-          value: "", // User will fill this later in the details panel
+          value: encryptedValue,
           lastRotated: new Date().toISOString()
         });
       });
@@ -112,6 +121,8 @@ export function AddServiceDialog({ onAdd, trigger }: AddServiceDialogProps) {
             setEnv={setEnv}
             description={description}
             setDescription={setDescription}
+            initialSecrets={initialSecrets}
+            setInitialSecrets={setInitialSecrets}
             onBack={() => setStep("select")}
             onSubmit={handleSubmit}
           />

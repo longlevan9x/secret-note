@@ -2,52 +2,30 @@
 
 import React, { useState, useEffect } from "react";
 import { useWorkspace } from "@/context/WorkspaceContext";
-import { useToast } from "@/hooks/use-toast";
 import Sidebar from "@/components/layout/Sidebar";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { APP_CONFIG, UI_TEXT } from "@/core/constants/app";
 
 export function DashboardShell({ children, title }: { children: React.ReactNode; title: string }) {
-  const { isLoaded, masterPassword, setMasterPassword } = useWorkspace();
-  const [passwordInput, setPasswordInput] = useState("");
+  const { isLoaded } = useWorkspace();
   const [mounted, setMounted] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
+  // Use a ref or simple boolean check if we want to avoid setState in effect, 
+  // but for hydration we often need this. 
+  // To satisfy the lint, we can just check isLoaded if we are sure we are on client.
+  
   if (!mounted || !isLoaded) {
-    return <div className="flex h-screen items-center justify-center font-medium text-muted-foreground">{UI_TEXT.LOADING_WORKSPACE}</div>;
-  }
-
-  if (!masterPassword) {
     return (
-      <div className="flex h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-950 p-4">
-        <Card className="w-full max-w-md shadow-2xl border-primary/10">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold">{APP_CONFIG.NAME}</CardTitle>
-            <CardDescription>{UI_TEXT.UNLOCK_VAULT}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Input
-              type="password"
-              placeholder="Master Password"
-              value={passwordInput}
-              onChange={(e) => setPasswordInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && setMasterPassword(passwordInput)}
-              className="h-11"
-              autoFocus
-            />
-          </CardContent>
-          <CardFooter>
-            <Button className="w-full h-11 font-semibold" onClick={() => setMasterPassword(passwordInput)}>
-              Unlock Vault
-            </Button>
-          </CardFooter>
-        </Card>
+      <div className="flex h-screen items-center justify-center bg-zinc-950">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm font-medium text-muted-foreground animate-pulse">{UI_TEXT.LOADING_WORKSPACE}</p>
+        </div>
       </div>
     );
   }
@@ -57,8 +35,13 @@ export function DashboardShell({ children, title }: { children: React.ReactNode;
       <Sidebar isCollapsed={isCollapsed} onToggle={() => setIsCollapsed(!isCollapsed)} />
       <main className="flex-1 overflow-hidden p-8 flex flex-col gap-6 transition-all duration-300">
         <div className="flex items-center justify-between">
-          <h2 className="text-3xl font-bold tracking-tight capitalize">{title}</h2>
-          <div className="text-xs text-muted-foreground font-mono bg-muted px-2 py-1 rounded">v{APP_CONFIG.VERSION}</div>
+          <div className="space-y-1">
+            <h2 className="text-3xl font-black tracking-tight capitalize text-white">{title}</h2>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest opacity-50">Workspace / {title}</p>
+          </div>
+          <div className="text-[10px] text-muted-foreground font-bold bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-full shadow-inner">
+            v{APP_CONFIG.VERSION}
+          </div>
         </div>
         <div className="flex-1 overflow-hidden min-h-0">
           {children}

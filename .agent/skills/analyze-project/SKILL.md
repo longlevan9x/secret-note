@@ -29,10 +29,11 @@ When this skill is invoked, follow these steps systematically:
     - Check if components follow the premium UI/UX rules (hover effects, transitions, cursors) defined in `AGENTS.md`.
     - Evaluate state management and data persistence patterns.
 
-4.  **Generate Recommendations**:
+4.  **Generate Recommendations & Create Phases**:
     - Propose the next 3-5 high-priority features.
     - Suggest specific UI/UX enhancements to make the app feel "premium".
     - Highlight any architectural improvements needed.
+    - **MANDATORY**: Tự động tạo các file roadmap mới trong thư mục `docs/phases/` tương ứng với các đề xuất (ví dụ: `phase-09-xxx.md`).
 
 5.  **Output Format**:
     - Provide a "Current Status" summary.

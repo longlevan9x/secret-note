@@ -4,6 +4,7 @@ export const APP_CONFIG = {
   STORAGE_KEYS: {
     MASTER_PASSWORD: "secret_note_master_pwd",
     WORKSPACE_DATA: "secret_note_workspace_v2",
+    STORAGE_CONFIG: "secret_note_storage_config",
   },
   DEFAULT_ENVIRONMENTS: ["Development", "Staging", "Production"],
   MODAL_RESET_TIMEOUT: 200,

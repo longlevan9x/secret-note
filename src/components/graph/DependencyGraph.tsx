@@ -135,7 +135,8 @@ export function DependencyGraph() {
             icon: service.icon, 
             provider: service.provider,
             env: service.env,
-            project: project.name
+            project: project.name,
+            color: service.color,
           },
         });
 

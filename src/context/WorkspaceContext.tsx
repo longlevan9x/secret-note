@@ -8,6 +8,7 @@ import {
   Project,
   Secret,
   ServiceNode,
+  ServiceTemplate,
   StorageConfig,
   WorkspaceData,
 } from "@/core/schema/types";
@@ -40,12 +41,14 @@ interface WorkspaceContextProps {
   updateService: (projectId: string, serviceId: string, updater: ServiceNode | ((service: ServiceNode) => ServiceNode)) => Promise<void>;
   removeService: (projectId: string, serviceId: string) => Promise<void>;
   upsertSecret: (projectId: string, serviceId: string, secret: Secret) => Promise<void>;
-  deleteSecret: (projectId: string, serviceId: string, keyToDelete: string) => Promise<void>;
-  toggleDependency: (projectId: string, serviceId: string, targetServiceId: string) => Promise<void>;
+  deleteSecret: (projectId: string, serviceId: string, secretKey: string) => Promise<void>;
+  toggleDependency: (projectId: string, serviceId: string, dependencyId: string) => Promise<void>;
   updateSettings: (settings: Partial<AppSettings>) => Promise<void>;
-  setProjectPosition: (projectId: string, position: NonNullable<Project["position"]>) => Promise<void>;
-  setProjectSize: (projectId: string, size: NonNullable<Project["size"]>) => Promise<void>;
-  setServicePosition: (projectId: string, serviceId: string, position: NonNullable<ServiceNode["position"]>) => Promise<void>;
+  setProjectPosition: (projectId: string, position: { x: number; y: number }) => Promise<void>;
+  setProjectSize: (projectId: string, size: { width: number; height: number }) => Promise<void>;
+  setServicePosition: (projectId: string, serviceId: string, position: { x: number; y: number }) => Promise<void>;
+  addCustomTemplate: (template: ServiceTemplate) => Promise<void>;
+  removeCustomTemplate: (templateId: string) => Promise<void>;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextProps | undefined>(undefined);
@@ -477,21 +480,21 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   );
 
   const deleteSecret = useCallback(
-    async (projectId: string, serviceId: string, keyToDelete: string) => {
+    async (projectId: string, serviceId: string, secretKey: string) => {
       await updateService(projectId, serviceId, (service) => ({
         ...service,
-        secrets: service.secrets.filter((secret) => secret.key !== keyToDelete),
+        secrets: service.secrets.filter((secret) => secret.key !== secretKey),
       }));
     },
     [updateService]
   );
 
   const toggleDependency = useCallback(
-    async (projectId: string, serviceId: string, targetServiceId: string) => {
+    async (projectId: string, serviceId: string, dependencyId: string) => {
       await updateService(projectId, serviceId, (service) => {
-        const dependsOn = service.dependsOn.includes(targetServiceId)
-          ? service.dependsOn.filter((dependencyId) => dependencyId !== targetServiceId)
-          : [...service.dependsOn, targetServiceId];
+        const dependsOn = service.dependsOn.includes(dependencyId)
+          ? service.dependsOn.filter((id) => id !== dependencyId)
+          : [...service.dependsOn, dependencyId];
 
         return {
           ...service,
@@ -516,25 +519,45 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   );
 
   const setProjectPosition = useCallback(
-    async (projectId: string, position: NonNullable<Project["position"]>) => {
+    async (projectId: string, position: { x: number; y: number }) => {
       await updateProject(projectId, (project) => ({ ...project, position }));
     },
     [updateProject]
   );
 
   const setProjectSize = useCallback(
-    async (projectId: string, size: NonNullable<Project["size"]>) => {
+    async (projectId: string, size: { width: number; height: number }) => {
       await updateProject(projectId, (project) => ({ ...project, size }));
     },
     [updateProject]
   );
 
   const setServicePosition = useCallback(
-    async (projectId: string, serviceId: string, position: NonNullable<ServiceNode["position"]>) => {
+    async (projectId: string, serviceId: string, position: { x: number; y: number }) => {
       await updateService(projectId, serviceId, (service) => ({ ...service, position }));
     },
     [updateService]
   );
+
+  const addCustomTemplate = async (template: ServiceTemplate) => {
+    if (!data) return;
+    const nextData = {
+      ...data,
+      customTemplates: [...(data.customTemplates || []), template],
+    };
+    setData(nextData);
+    await persistWorkspace(nextData);
+  };
+
+  const removeCustomTemplate = async (templateId: string) => {
+    if (!data) return;
+    const nextData = {
+      ...data,
+      customTemplates: (data.customTemplates || []).filter(t => t.providerId !== templateId),
+    };
+    setData(nextData);
+    await persistWorkspace(nextData);
+  };
 
   return (
     <WorkspaceContext.Provider
@@ -566,6 +589,8 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setProjectPosition,
         setProjectSize,
         setServicePosition,
+        addCustomTemplate,
+        removeCustomTemplate,
       }}
     >
       {children}

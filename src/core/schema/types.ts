@@ -36,6 +36,7 @@ export interface ServiceNode {
   secrets: Secret[];
   dependsOn: string[]; // Array of ServiceNode IDs this node depends on
   position?: { x: number; y: number };
+  color?: string; // Hex color code for graph node
 }
 
 export interface Project {
@@ -51,6 +52,7 @@ export interface WorkspaceData {
   settings: AppSettings;
   projects: Project[];
   validationHash?: string; // Used to verify master password
+  customTemplates?: ServiceTemplate[];
   metadata?: WorkspaceMetadata;
 }
 
@@ -133,5 +135,6 @@ export const DEFAULT_WORKSPACE_DATA: WorkspaceData = {
     environments: ["Development", "Staging", "Production"],
   },
   projects: [],
+  customTemplates: [],
   metadata: DEFAULT_WORKSPACE_METADATA,
 };

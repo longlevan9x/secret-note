@@ -12,6 +12,7 @@ interface ServiceGraphNodeProps {
     provider: string;
     env: string;
     project: string;
+    color?: string;
   };
 }
 
@@ -21,13 +22,17 @@ export const ServiceGraphNode = ({ data }: ServiceGraphNodeProps) => {
   return (
     <div className="group relative">
       {/* Selection Glow Effect */}
-      <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/50 to-blue-500/50 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
+      <div 
+        className="absolute -inset-0.5 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-500"
+        style={{ backgroundColor: data.color || "var(--primary)" }}
+      ></div>
       
       <div className="relative px-5 py-4 shadow-xl rounded-2xl bg-card/80 backdrop-blur-md border border-white/10 min-w-[180px] transition-all duration-300 hover:-translate-y-1 active:scale-95">
         <Handle 
           type="target" 
           position={Position.Top} 
-          className="w-3 h-3 bg-primary border-2 border-background shadow-sm" 
+          className="w-3 h-3 border-2 border-background shadow-sm" 
+          style={{ backgroundColor: data.color || "var(--primary)" }}
         />
         
         <div className="flex items-center gap-4">
@@ -68,7 +73,8 @@ export const ServiceGraphNode = ({ data }: ServiceGraphNodeProps) => {
         <Handle 
           type="source" 
           position={Position.Bottom} 
-          className="w-3 h-3 bg-primary border-2 border-background shadow-sm" 
+          className="w-3 h-3 border-2 border-background shadow-sm" 
+          style={{ backgroundColor: data.color || "var(--primary)" }}
         />
       </div>
     </div>

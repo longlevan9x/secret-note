@@ -1,7 +1,7 @@
 "use client";
 
-import { DashboardShell } from "@/components/layout/DashboardShell";
-import { DependencyGraph } from "@/components/graph/DependencyGraph";
+import { DashboardShell } from "@/client/components/layout/DashboardShell";
+import { DependencyGraph } from "@/client/components/graph/DependencyGraph";
 import { ReactFlowProvider } from "@xyflow/react";
 
 export default function GraphPage() {

@@ -1,7 +1,7 @@
 "use client";
 
-import { DashboardShell } from "@/components/layout/DashboardShell";
-import { ProjectList } from "@/components/dashboard/ProjectList";
+import { DashboardShell } from "@/client/components/layout/DashboardShell";
+import { ProjectList } from "@/client/components/projects/ProjectList";
 
 export default function ProjectsPage() {
   return (

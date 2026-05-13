@@ -1,7 +1,7 @@
 "use client";
 
-import { DashboardShell } from "@/components/layout/DashboardShell";
-import { SettingsView } from "@/components/dashboard/SettingsView";
+import { DashboardShell } from "@/client/components/layout/DashboardShell";
+import { SettingsView } from "@/client/components/settings/SettingsView";
 
 export default function SettingsPage() {
   return (

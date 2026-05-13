@@ -1,9 +1,9 @@
 "use client";
 
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import { DashboardShell } from "@/client/components/layout/DashboardShell";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useWorkspace } from "@/context/WorkspaceContext";
+import { useWorkspace } from "@/client/context/WorkspaceContext";
 
 export default function Home() {
   const { masterPassword } = useWorkspace();

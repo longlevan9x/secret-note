@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { WorkspaceProvider } from "@/context/WorkspaceContext";
-import { Toaster } from "@/components/ui/toaster";
-import { CommandPalette } from "@/components/layout/CommandPalette";
+import { WorkspaceProvider } from "@/client/context/WorkspaceContext";
+import { Toaster } from "@/client/components/ui/Toaster";
+import { CommandPalette } from "@/client/components/layout/CommandPalette";
+import { SecurityWrapper } from "@/client/components/security/SecurityWrapper";
+import { APP_CONFIG } from "@/shared/constants/app";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,11 +18,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Secret Note",
+  title: APP_CONFIG.NAME,
   description: "Serverless Ecosystem Manager",
 };
 
-import { SecurityWrapper } from "@/components/security/SecurityWrapper";
 
 export default function RootLayout({
   children,

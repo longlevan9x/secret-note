@@ -15,6 +15,15 @@ interface SelectProps {
   placeholder?: string;
 }
 
+interface SelectChildProps {
+  value?: string;
+  children?: React.ReactNode;
+}
+
+const isSelectChild = (child: React.ReactNode): child is React.ReactElement<SelectChildProps> => {
+  return React.isValidElement<SelectChildProps>(child);
+};
+
 const Select = ({ 
   label, 
   value, 
@@ -34,10 +43,10 @@ const Select = ({
   const selectedLabel = React.useMemo(() => {
     const childrenArray = React.Children.toArray(children);
     const selectedItem = childrenArray.find(
-      (child) => React.isValidElement(child) && (child.props as any).value === value
+      (child) => isSelectChild(child) && child.props.value === value
     );
-    return selectedItem && React.isValidElement(selectedItem) 
-      ? (selectedItem.props as any).children 
+    return isSelectChild(selectedItem)
+      ? selectedItem.props.children
       : null;
   }, [children, value]);
 

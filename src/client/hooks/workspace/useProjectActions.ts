@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { Project, WorkspaceData } from "@/shared/schema/types";
 import { IStorage } from "@/shared/interfaces/iStorage";
 
@@ -84,11 +84,11 @@ export const useProjectActions = (
     [mutateWorkspace, adapter]
   );
 
-  return {
+  return useMemo(() => ({
     addProject,
     removeProject,
     updateProject,
     setProjectPosition,
     setProjectSize,
-  };
+  }), [addProject, removeProject, setProjectPosition, setProjectSize, updateProject]);
 };

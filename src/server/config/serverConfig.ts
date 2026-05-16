@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 
 class ServerConfig {
-  private fileConfig: Record<string, any> = {};
+  private fileConfig: Record<string, unknown> = {};
 
   constructor() {
     this.loadConfigFile();
@@ -16,7 +16,7 @@ class ServerConfig {
       
       if (fs.existsSync(configPath)) {
         const content = fs.readFileSync(configPath, "utf-8");
-        this.fileConfig = JSON.parse(content);
+        this.fileConfig = JSON.parse(content) as Record<string, unknown>;
         console.log("[Config] Successfully loaded server.config.json", this.fileConfig);
       } else {
         console.log("[Config] server.config.json not found, using ENV/Defaults");
@@ -29,12 +29,12 @@ class ServerConfig {
   /**
    * Helper to get values with priority: ENV > FILE > DEFAULT
    */
-  private getValue(key: string, defaultValue: any): any {
+  private getValue<T>(key: string, defaultValue: T): T {
     // 1. Check ENV
-    if (process.env[key] !== undefined) return process.env[key];
+    if (process.env[key] !== undefined) return process.env[key] as T;
     
     // 2. Check File Config
-    if (this.fileConfig[key] !== undefined) return this.fileConfig[key];
+    if (this.fileConfig[key] !== undefined) return this.fileConfig[key] as T;
     
     // 3. Return Default
     return defaultValue;

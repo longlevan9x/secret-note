@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { Button } from "@/client/components/ui/Button";
 import { 
   Table, 
   TableBody, 
@@ -8,8 +9,7 @@ import {
   TableHead, 
   TableHeader, 
   TableRow,
-  Button
-} from "@/client/components/ui";
+} from "@/client/components/ui/Table";
 import { 
   Eye, 
   EyeOff, 
@@ -24,6 +24,7 @@ import {
   Globe,
   Trash2
 } from "lucide-react";
+import type { SecretWithUsage } from "./types";
 
 const PROVIDER_ICONS: Record<string, React.ReactNode> = {
   vercel: <Zap className="w-3.5 h-3.5 text-blue-400" />,
@@ -34,13 +35,13 @@ const PROVIDER_ICONS: Record<string, React.ReactNode> = {
 const DEFAULT_PROVIDER_ICON = <Globe className="w-3.5 h-3.5 text-zinc-400" />;
 
 interface SecretsTableProps {
-  secrets: any[];
+  secrets: SecretWithUsage[];
   visibleSecrets: Record<string, boolean>;
   copiedKey: string | null;
   onToggleVisibility: (id: string) => void;
   onCopy: (value: string, id: string) => void;
-  onEdit: (secret: any) => void;
-  onViewUsage: (secret: any) => void;
+  onEdit: (secret: SecretWithUsage) => void;
+  onViewUsage: (secret: SecretWithUsage) => void;
   onDelete: (projectId: string, secretKey: string) => void;
 }
 
@@ -103,7 +104,7 @@ export function SecretsTable({
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      {secret.linkedServices.map((service: any) => (
+                      {secret.linkedServices.map((service) => (
                         <div key={service.id} className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter">
                           <div className="flex items-center justify-center scale-75 -ml-1">
                             {getProviderIcon(service.provider)}

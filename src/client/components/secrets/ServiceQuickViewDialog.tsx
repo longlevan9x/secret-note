@@ -6,17 +6,19 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
-  Badge, 
-  ScrollArea,
-  Button
-} from "@/client/components/ui";
-import { Zap, Database, Cpu, Globe, Key, Info } from "lucide-react";
+} from "@/client/components/ui/Dialog";
+import { Badge } from "@/client/components/ui/Badge";
+import { Button } from "@/client/components/ui/Button";
+import { ScrollArea } from "@/client/components/ui/ScrollArea";
+import { Zap, Database, Cpu, Globe, Key } from "lucide-react";
+import type { ServiceNode } from "@/shared/schema/types";
+import type { ServiceQuickViewContext } from "./types";
 
 interface ServiceQuickViewDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  service: any;
-  projectContext: any;
+  service: ServiceNode | null;
+  projectContext: ServiceQuickViewContext;
 }
 
 export function ServiceQuickViewDialog({
@@ -25,7 +27,7 @@ export function ServiceQuickViewDialog({
   service,
   projectContext
 }: ServiceQuickViewDialogProps) {
-  const getProviderIcon = (provider: string) => {
+  const getProviderIcon = (provider?: string) => {
     switch (provider?.toLowerCase()) {
       case 'vercel': return <Zap className="w-3.5 h-3.5 text-blue-400" />;
       case 'supabase': return <Database className="w-3.5 h-3.5 text-emerald-400" />;
@@ -97,7 +99,7 @@ export function ServiceQuickViewDialog({
                     <p className="text-[11px] text-zinc-600 italic ml-1">No direct infrastructure dependencies.</p>
                   ) : (
                     service.dependsOn?.map((depId: string) => {
-                      const dep = projectContext?.nodes.find((n: any) => n.id === depId);
+                      const dep = projectContext?.nodes.find((n) => n.id === depId);
                       return (
                         <div key={depId} className="flex items-center gap-3 p-2.5 rounded bg-blue-500/5 border border-blue-500/10">
                           {getProviderIcon(dep?.provider)}

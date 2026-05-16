@@ -6,7 +6,7 @@ import { PrivacyShield } from "./PrivacyShield";
 
 
 export function SecurityWrapper({ children }: { children: React.ReactNode }) {
-  const { data, masterPassword, isLoaded } = useWorkspace();
+  const { masterPassword, isLoaded } = useWorkspace();
 
   if (!isLoaded) {
     return (

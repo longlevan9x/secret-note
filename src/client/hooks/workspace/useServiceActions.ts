@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { ServiceNode, Secret, WorkspaceData } from "@/shared/schema/types";
 import { IStorage } from "@/shared/interfaces/iStorage";
 
@@ -130,11 +130,11 @@ export const useServiceActions = (
     [mutateWorkspace, adapter]
   );
 
-  return {
+  return useMemo(() => ({
     addService,
     updateService,
     removeService,
     setServicePosition,
     toggleDependency,
-  };
+  }), [addService, removeService, setServicePosition, toggleDependency, updateService]);
 };

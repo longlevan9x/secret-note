@@ -1,29 +1,35 @@
-import { workspaceStorage } from "../storage/storageFactory";
+import { StorageFactory } from "../storage/storageFactory";
 import { Project, WorkspaceData } from "@/shared/schema/types";
 
 export class ProjectRepository {
   async findAll(): Promise<WorkspaceData | null> {
-    return await workspaceStorage.load();
+    const storage = await StorageFactory.getStorage();
+    return storage.load();
   }
 
   async create(project: Project): Promise<void> {
-    await workspaceStorage.addProject(project);
+    const storage = await StorageFactory.getStorage();
+    await storage.addProject(project);
   }
 
   async update(id: string, updates: Partial<Project>): Promise<void> {
-    await workspaceStorage.updateProject(id, updates);
+    const storage = await StorageFactory.getStorage();
+    await storage.updateProject(id, updates);
   }
 
   async delete(id: string): Promise<void> {
-    await workspaceStorage.removeProject(id);
+    const storage = await StorageFactory.getStorage();
+    await storage.removeProject(id);
   }
 
   async updatePosition(id: string, x: number, y: number): Promise<void> {
-    await workspaceStorage.setPosition(id, { x, y });
+    const storage = await StorageFactory.getStorage();
+    await storage.setPosition(id, { x, y });
   }
 
   async saveAll(data: WorkspaceData): Promise<void> {
-    await workspaceStorage.save(data);
+    const storage = await StorageFactory.getStorage();
+    await storage.save(data);
   }
 }
 

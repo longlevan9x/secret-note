@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { 
   Dialog, 
   DialogContent, 
@@ -42,12 +42,12 @@ export function UpsertSecretDialog({
   const open = externalOpen !== undefined ? externalOpen : internalOpen;
   const setOpen = externalOnOpenChange !== undefined ? externalOnOpenChange : setInternalOpen;
 
-  const [key, setKey] = useState("");
-  const [value, setValue] = useState("");
-  const [note, setNote] = useState("");
+  const [key, setKey] = useState(() => editingSecret?.key ?? "");
+  const [value, setValue] = useState(() => editingSecret?.value ?? "");
+  const [note, setNote] = useState(() => editingSecret?.note ?? "");
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
+  const resetForm = () => {
     if (editingSecret) {
       setKey(editingSecret.key);
       setValue(editingSecret.value);
@@ -57,7 +57,14 @@ export function UpsertSecretDialog({
       setValue("");
       setNote("");
     }
-  }, [editingSecret, open]);
+  };
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (nextOpen) {
+      resetForm();
+    }
+    setOpen(nextOpen);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,19 +98,18 @@ export function UpsertSecretDialog({
   };
 
   const isEditing = !!editingSecret;
+  const triggerElement = trigger ?? (
+    externalOpen === undefined ? (
+      <Button variant={isEditing ? "ghost" : "outline"} size={isEditing ? "icon" : "sm"} className="gap-2">
+        {isEditing ? <Settings2 className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+        {!isEditing && "Add Secret"}
+      </Button>
+    ) : null
+  );
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger 
-        render={
-          trigger || (externalOpen !== undefined ? <div className="hidden" /> : (
-            <Button variant={isEditing ? "ghost" : "outline"} size={isEditing ? "icon" : "sm"} className="gap-2">
-              {isEditing ? <Settings2 className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-              {!isEditing && "Add Secret"}
-            </Button>
-          ))
-        }
-      />
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      {triggerElement && <DialogTrigger render={triggerElement} />}
       <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-zinc-800 text-white">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl font-black italic">

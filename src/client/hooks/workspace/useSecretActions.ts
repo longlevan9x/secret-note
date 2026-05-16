@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { Secret, WorkspaceData } from "@/shared/schema/types";
 import { IStorage } from "@/shared/interfaces/iStorage";
 
@@ -148,11 +148,11 @@ export const useSecretActions = (
     [mutateWorkspace, adapter]
   );
 
-  return {
+  return useMemo(() => ({
     upsertSecret,
     batchUpsertSecrets,
     deleteSecret,
     linkSecretToService,
     unlinkSecretFromService,
-  };
+  }), [batchUpsertSecrets, deleteSecret, linkSecretToService, unlinkSecretFromService, upsertSecret]);
 };

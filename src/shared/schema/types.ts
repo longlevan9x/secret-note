@@ -98,7 +98,7 @@ export interface VaultConfig {
   lastAccessedAt?: string;
 }
 
-export interface StorageConfig extends VaultConfig {}
+export type StorageConfig = VaultConfig;
 
 
 export interface StorageMetadata {
@@ -168,5 +168,5 @@ export enum WorkspaceActionType {
 
 export interface WorkspaceAction {
   type: WorkspaceActionType;
-  payload: any;
+  payload: unknown;
 }

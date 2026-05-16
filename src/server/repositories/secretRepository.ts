@@ -1,17 +1,20 @@
-import { workspaceStorage } from "../storage/storageFactory";
+import { StorageFactory } from "../storage/storageFactory";
 import { Secret } from "@/shared/schema/types";
 
 export class SecretRepository {
   async upsert(projectId: string, secret: Secret, serviceId?: string): Promise<void> {
-    await workspaceStorage.upsertSecret(projectId, secret, serviceId);
+    const storage = await StorageFactory.getStorage();
+    await storage.upsertSecret(projectId, secret, serviceId);
   }
 
   async batchUpsert(projectId: string, secrets: Secret[], serviceId?: string): Promise<void> {
-    await workspaceStorage.batchUpsertSecrets(projectId, secrets, serviceId);
+    const storage = await StorageFactory.getStorage();
+    await storage.batchUpsertSecrets(projectId, secrets, serviceId);
   }
 
   async delete(projectId: string, secretKey: string): Promise<void> {
-    await workspaceStorage.deleteSecret(projectId, secretKey);
+    const storage = await StorageFactory.getStorage();
+    await storage.deleteSecret(projectId, secretKey);
   }
 }
 

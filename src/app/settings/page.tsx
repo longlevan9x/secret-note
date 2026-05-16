@@ -1,5 +1,3 @@
-"use client";
-
 import { DashboardShell } from "@/client/components/layout/DashboardShell";
 import { SettingsView } from "@/client/components/settings/SettingsView";
 

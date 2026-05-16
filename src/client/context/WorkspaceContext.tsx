@@ -112,6 +112,7 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const adapter = useMemo<IStorage>(() => new ApiAdapter(), []);
 
   const initData = useCallback(async () => {
+    await Promise.resolve();
     setIsLoading(true);
     setIsLoaded(false);
     setError(null);
@@ -135,7 +136,13 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, [adapter, storageConfig, setData]);
 
-  useEffect(() => { void initData(); }, [initData]);
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      void initData();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [initData]);
 
   const persistWorkspace = useCallback(async (nextData: WorkspaceData) => {
     const snapshot = buildWorkspaceSnapshot(nextData, storageConfig);
@@ -204,7 +211,7 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     else sessionStorage.removeItem(APP_CONFIG.STORAGE_KEYS.MASTER_PASSWORD);
   }, []);
 
-  const unlockVault = async (password: string): Promise<boolean> => {
+  const unlockVault = useCallback(async (password: string): Promise<boolean> => {
     try {
       const res = await fetch("/api/projects", { // Updated endpoint
         headers: { "Authorization": `Bearer ${password}` }
@@ -215,34 +222,53 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         return true;
       }
       return false;
-    } catch (error) {
+    } catch {
       return false;
     }
-  };
+  }, [initData, setMasterPassword]);
+
+  const contextValue = useMemo<WorkspaceContextProps>(() => ({
+    data,
+    masterPassword,
+    isLoaded,
+    isLoading,
+    isSaving,
+    isSyncing,
+    error,
+    storageConfig,
+    setMasterPassword,
+    updateWorkspaceData,
+    updateStorageConfig,
+    syncData,
+    unlockVault,
+    ...projectActions,
+    ...serviceActions,
+    ...secretActions,
+    ...templateActions,
+    ...settingsActions,
+  }), [
+    data,
+    error,
+    isLoaded,
+    isLoading,
+    isSaving,
+    isSyncing,
+    masterPassword,
+    projectActions,
+    secretActions,
+    serviceActions,
+    setMasterPassword,
+    settingsActions,
+    storageConfig,
+    syncData,
+    templateActions,
+    unlockVault,
+    updateStorageConfig,
+    updateWorkspaceData,
+  ]);
 
   return (
-    <WorkspaceContext.Provider
-      value={{
-        data,
-        masterPassword,
-        isLoaded,
-        isLoading,
-        isSaving,
-        isSyncing,
-        error,
-        storageConfig,
-        setMasterPassword,
-        updateWorkspaceData,
-        updateStorageConfig,
-        syncData,
-        unlockVault,
-        ...projectActions,
-        ...serviceActions,
-        ...secretActions,
-        ...templateActions,
-        ...settingsActions,
-      }}
-    >
+    <WorkspaceContext.Provider value={contextValue}>
       {children}
     </WorkspaceContext.Provider>
   );

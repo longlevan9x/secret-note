@@ -1,15 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Search, Folder, Zap } from "lucide-react";
-import { 
-  Dialog, 
-  DialogContent, 
-  Input, 
-  ScrollArea 
-} from "@/client/components/ui";
+import { Dialog, DialogContent } from "@/client/components/ui/Dialog";
+import { Input } from "@/client/components/ui/Input";
+import { ScrollArea } from "@/client/components/ui/ScrollArea";
 import { useWorkspace } from "@/client/context/WorkspaceContext";
-import { Project, ServiceNode } from "@/shared/schema/types";
+import type { Project, ServiceNode } from "@/shared/schema/types";
+
+type SearchableService = ServiceNode & { projectName: string };
 
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
@@ -27,19 +26,26 @@ export function CommandPalette() {
     return () => document.removeEventListener("keydown", down);
   }, []);
 
-  if (!data) return null;
+  const results = useMemo((): { projects: Project[]; services: SearchableService[] } => {
+    const projects = data?.projects ?? [];
+    const normalizedQuery = query.toLowerCase();
 
-  const results = {
-    projects: data.projects.filter((p: Project) => 
-      p.name.toLowerCase().includes(query.toLowerCase())
-    ).slice(0, 3),
-    services: data.projects.flatMap((p: Project) => 
-      p.nodes.map((n: ServiceNode) => ({ ...n, projectName: p.name }))
-    ).filter((s: any) => 
-      s.name.toLowerCase().includes(query.toLowerCase()) || 
-      s.provider.toLowerCase().includes(query.toLowerCase())
-    ).slice(0, 8)
-  };
+    return {
+      projects: projects
+        .filter((project) => project.name.toLowerCase().includes(normalizedQuery))
+        .slice(0, 3),
+      services: projects
+        .flatMap((project) => project.nodes.map((service) => ({ ...service, projectName: project.name })))
+        .filter(
+          (service) =>
+            service.name.toLowerCase().includes(normalizedQuery) ||
+            service.provider.toLowerCase().includes(normalizedQuery)
+        )
+        .slice(0, 8),
+    };
+  }, [data?.projects, query]);
+
+  if (!data) return null;
 
   const handleSelect = (serviceId?: string) => {
     // We would need a way to trigger navigation/selection globally
@@ -102,7 +108,7 @@ export function CommandPalette() {
                   Services & Secrets
                 </p>
                 <div className="space-y-1">
-                  {results.services.map((service: any) => (
+                  {results.services.map((service) => (
                     <button
                       key={service.id}
                       className="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm hover:bg-primary/10 hover:text-primary transition-colors text-left group"

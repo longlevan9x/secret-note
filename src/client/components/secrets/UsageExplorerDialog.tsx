@@ -6,16 +6,17 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
-  Button,
-  Badge
-} from "@/client/components/ui";
+} from "@/client/components/ui/Dialog";
+import { Button } from "@/client/components/ui/Button";
 import { Link as LinkIcon, FolderOpen, Server, ExternalLink, Info, Zap, Database, Cpu, Globe } from "lucide-react";
+import type { ServiceNode } from "@/shared/schema/types";
+import type { SecretWithUsage } from "./types";
 
 interface UsageExplorerDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  secret: any;
-  onViewServiceDetail: (service: any, projectId: string) => void;
+  secret: SecretWithUsage | null;
+  onViewServiceDetail: (service: ServiceNode, projectId: string) => void;
   onGoToProject: (projectId: string) => void;
 }
 
@@ -87,7 +88,7 @@ export function UsageExplorerDialog({
                     <p className="text-xs text-zinc-600 italic">This secret is not linked to any services yet.</p>
                   </div>
                 ) : (
-                  secret.linkedServices.map((service: any) => (
+                  secret.linkedServices.map((service) => (
                     <div key={service.id} className="flex items-center justify-between p-3 rounded-lg bg-zinc-900/30 border border-zinc-800/50 group/item hover:bg-zinc-900/50 transition-all">
                       <div className="flex items-center gap-3">
                         <div className="p-1.5 rounded bg-zinc-950 border border-zinc-800 group-hover/item:border-zinc-700 transition-colors">

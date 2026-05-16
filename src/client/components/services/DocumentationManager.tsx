@@ -1,7 +1,11 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, Button, Textarea, Label, Input } from "@/client/components/ui";
-import ReactMarkdown from "react-markdown";
+import dynamic from "next/dynamic";
+
+const ReactMarkdown = dynamic(() => import("react-markdown"), {
+  loading: () => <p className="text-xs text-zinc-500 italic">Loading preview...</p>,
+});
 
 interface DocumentationManagerProps {
   isPreviewMode: boolean;

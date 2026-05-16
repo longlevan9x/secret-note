@@ -28,7 +28,6 @@ import {
   Plus, 
   RotateCcw,
   MousePointer2,
-  FolderTree,
   Share2,
 } from "lucide-react";
 import { Button, buttonVariants, Select, SelectItem } from "@/client/components/ui";
@@ -53,6 +52,7 @@ export function DependencyGraph() {
     data,
     addService,
     updateService,
+    updateWorkspaceData,
     setProjectPosition,
     setProjectSize,
     setServicePosition,
@@ -71,6 +71,14 @@ export function DependencyGraph() {
       project.nodes.forEach((service) => {
         map.set(service.id, project.id);
       });
+    });
+    return map;
+  }, [data]);
+
+  const groupProjectMap = useMemo(() => {
+    const map = new Map<string, string>();
+    data?.projects.forEach((project) => {
+      map.set(`group-${project.id}`, project.id);
     });
     return map;
   }, [data]);
@@ -182,20 +190,18 @@ export function DependencyGraph() {
     (_event: React.MouseEvent | TouchEvent, node: Node) => {
       if (!data) return;
 
-      data.projects.forEach((project) => {
-        // If it's a project container
-        if (`group-${project.id}` === node.id) {
-          void setProjectPosition(project.id, node.position);
-          return;
-        }
-        
-        // If it's a service node
-        if (project.nodes.some((service) => service.id === node.id)) {
-          void setServicePosition(project.id, node.id, node.position);
-        }
-      });
+      const projectId = groupProjectMap.get(node.id);
+      if (projectId) {
+        void setProjectPosition(projectId, node.position);
+        return;
+      }
+
+      const serviceProjectId = serviceProjectMap.get(node.id);
+      if (serviceProjectId) {
+        void setServicePosition(serviceProjectId, node.id, node.position);
+      }
     },
-    [data, setProjectPosition, setServicePosition]
+    [data, groupProjectMap, serviceProjectMap, setProjectPosition, setServicePosition]
   );
 
 
@@ -223,17 +229,15 @@ export function DependencyGraph() {
       return updatedProject;
     });
 
-    void Promise.all(
-      resetProjects.flatMap((project) => [
-        setProjectPosition(project.id, project.position!),
-        ...project.nodes.map((node) => setServicePosition(project.id, node.id, node.position!)),
-      ])
-    );
+    void updateWorkspaceData({
+      ...data,
+      projects: resetProjects,
+    });
     
     setTimeout(() => {
       fitView({ duration: 800 });
     }, 200);
-  }, [data, fitView, setProjectPosition, setServicePosition]);
+  }, [data, fitView, updateWorkspaceData]);
 
   const handleAddService = useCallback((serviceData: Omit<ServiceNode, "id">, initialSecrets?: Secret[]) => {
     if (!data || !resolvedActiveProjectId) return;

@@ -1,20 +1,15 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useWorkspace } from "@/client/context/WorkspaceContext";
 import Sidebar from "@/client/components/layout/Sidebar";
 import { APP_CONFIG } from "@/shared/constants/app";
 
 export function DashboardShell({ children, title }: { children: React.ReactNode; title: string }) {
   const { isLoaded } = useWorkspace();
-  const [mounted, setMounted] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted || !isLoaded) {
+  if (!isLoaded) {
     return (
       <div className="flex h-screen items-center justify-center bg-zinc-950">
         <div className="flex flex-col items-center gap-4">
@@ -28,7 +23,7 @@ export function DashboardShell({ children, title }: { children: React.ReactNode;
   return (
     <div className="flex h-screen overflow-hidden bg-zinc-950">
       {/* Sidebar - Fixed height via parent h-screen */}
-      <Sidebar isCollapsed={isCollapsed} onToggle={() => setIsCollapsed(!isCollapsed)} />
+      <Sidebar isCollapsed={isCollapsed} onToggle={() => setIsCollapsed((collapsed) => !collapsed)} />
       
       {/* Main content area - Takes remaining width and forced h-screen */}
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden transition-all duration-300">

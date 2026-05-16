@@ -1,38 +1,45 @@
 import { IStorage } from "@/shared/interfaces/iStorage";
-import { JsonStorage } from "./drivers/jsonStorage";
-import { SupabaseStorage } from "./drivers/supabaseStorage";
-import { DrizzleStorage } from "./drivers/drizzleStorage";
 import { serverConfig } from "../config/serverConfig";
 import { APP_CONFIG } from "@/shared/constants/app";
 
 export class StorageFactory {
-  private static instance: IStorage | null = null;
+  private static instancePromise: Promise<IStorage> | null = null;
 
-  static getStorage(): IStorage {
-    if (this.instance) return this.instance;
+  static async getStorage(): Promise<IStorage> {
+    if (!this.instancePromise) {
+      this.instancePromise = this.createStorage();
+    }
 
+    return this.instancePromise;
+  }
+
+  static resetForTests(): void {
+    this.instancePromise = null;
+  }
+
+  private static async createStorage(): Promise<IStorage> {
     const driverType = serverConfig.storageDriver;
 
     switch (driverType) {
       case APP_CONFIG.DRIVERS.JSON:
-      case APP_CONFIG.DRIVERS.FS:
-        this.instance = new JsonStorage();
-        break;
+      case APP_CONFIG.DRIVERS.FS: {
+        const { JsonStorage } = await import("./drivers/jsonStorage");
+        return new JsonStorage();
+      }
       case APP_CONFIG.DRIVERS.SQLITE:
       case APP_CONFIG.DRIVERS.POSTGRES:
-      case APP_CONFIG.DRIVERS.MYSQL:
-        this.instance = new DrizzleStorage();
-        break;
-      case APP_CONFIG.DRIVERS.SUPABASE:
-        this.instance = new SupabaseStorage();
-        break;
+      case APP_CONFIG.DRIVERS.MYSQL: {
+        const { DrizzleStorage } = await import("./drivers/drizzleStorage");
+        return new DrizzleStorage();
+      }
+      case APP_CONFIG.DRIVERS.SUPABASE: {
+        const { SupabaseStorage } = await import("./drivers/supabaseStorage");
+        return new SupabaseStorage();
+      }
       default:
         console.warn(`Storage driver ${driverType} not found, falling back to DrizzleStorage`);
-        this.instance = new DrizzleStorage();
+        const { DrizzleStorage } = await import("./drivers/drizzleStorage");
+        return new DrizzleStorage();
     }
-
-    return this.instance;
   }
 }
-
-export const workspaceStorage = StorageFactory.getStorage();

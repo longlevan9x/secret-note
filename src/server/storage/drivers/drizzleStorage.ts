@@ -29,9 +29,9 @@ export class DrizzleStorage implements IStorage {
         return {
           id: s.id,
           name: s.name,
-          provider: s.provider as any,
-          icon: s.icon as any,
-          env: s.env as any,
+          provider: s.provider,
+          icon: s.icon || undefined,
+          env: s.env || APP_CONFIG.DEFAULT_ENVIRONMENTS[0],
           description: s.description || "",
           position: { x: s.posX || 0, y: s.posY || 0 },
           secretKeys: sSecrets.map(ss => ss.secretKey),

@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { ServiceTemplate, AppSettings, WorkspaceData } from "@/shared/schema/types";
 import { IStorage } from "@/shared/interfaces/iStorage";
 
@@ -26,7 +26,7 @@ export const useTemplateActions = (
     [mutateWorkspace, adapter]
   );
 
-  return { addCustomTemplate, removeCustomTemplate };
+  return useMemo(() => ({ addCustomTemplate, removeCustomTemplate }), [addCustomTemplate, removeCustomTemplate]);
 };
 
 export const useSettingsActions = (
@@ -46,5 +46,5 @@ export const useSettingsActions = (
     [mutateWorkspace, adapter]
   );
 
-  return { updateSettings };
+  return useMemo(() => ({ updateSettings }), [updateSettings]);
 };
